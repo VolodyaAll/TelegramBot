@@ -3,18 +3,17 @@ require_relative 'commands/start'
 require_relative 'commands/checkin'
 
 class WebhooksController < Telegram::Bot::UpdatesController
-  def initialize(*)
-    super
-    Telegram::Bot::UpdatesController.session_store = :redis_store, { expires_in: 2_592_000 }
-  end
-
   include StartCommand
   include CheckinCommand
   include Telegram::Bot::UpdatesController::MessageContext
+
+  def initialize(*)
+    super
+    Telegram::Bot::UpdatesController.session_store = :redis_store, { expires_in: 3_888_000 }
+  end
 end
 
-TOKEN = '890059889:AAESf4Gi_a8Kq7pxM7xzGbJQVnhvLwp_TZQ'
-bot = Telegram::Bot::Client.new(TOKEN)
+bot = Telegram::Bot::Client.new(ENV['BOT_TOKEN'])
 
 # poller-mode
 require 'logger'
