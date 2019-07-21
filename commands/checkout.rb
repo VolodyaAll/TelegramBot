@@ -2,16 +2,16 @@ require 'open-uri'
 require 'fileutils'
 require 'json'
 
-module CheckinCommand
-  def checkin!(*)
+module CheckoutCommand 
+  def checkout!(*)
     return unless registered?
-    return unless checkouted?
+    return unless checkined?
 
-    save_context :checkin_photo
+    save_context :checkout_photo
     respond_with :message, text: 'Пришли мне своё фото.'
   end
 
-  def checkin_photo(*)
+  def checkout_photo(*)
     session[:timestamp] = Time.now.strftime("%Y-%m-%d_%H-%M-%S")
 
     FileUtils.mkdir_p(path_for_check) unless File.exist?(path_for_check)
@@ -22,16 +22,16 @@ module CheckinCommand
       .read, symbolize_names: true)[:result][:file_path]).read
     end
 
-    save_context :checkin_geolocate
+    save_context :checkout_geolocate
     respond_with :message, text: "Красава! Теперь пришли мне свои координаты."
   end
 
-  def checkin_geolocate(*)
+  def checkout_geolocate(*)
     File.open(path_for_check + 'location.txt', 'wb') do |file|
       file << payload['location']
     end
-    session[:checkin] = true
-    respond_with :message, text: 'Молодца! Удачной работы! Сдать смену можешь так -> /checkout'
+    session[:checkin] = false
+    respond_with :message, text: 'Отдохни хорошенько и приходи снова -> /checkin'
   end
 
   def registered?
@@ -39,12 +39,12 @@ module CheckinCommand
     session.key?(:number)
   end
 
-  def checkouted?
-    respond_with :message, text: 'Ты уже принял смену. Можешь её сдать -> /checkout' if session[:checkin]
-    !session[:checkin]
+  def checkined?
+    respond_with :message, text: 'Сначала ты должен принять смену -> /checkin' unless session[:checkin]
+    session[:checkin]
   end
 
   def path_for_check
-    "./public/#{session[:number]}/checkins/#{session[:timestamp]}/"
+    "./public/#{session[:number]}/checkouts/#{session[:timestamp]}/"
   end
 end

@@ -1,10 +1,12 @@
 require 'telegram/bot'
 require_relative 'commands/start'
 require_relative 'commands/checkin'
+require_relative 'commands/checkout'
 
 class WebhooksController < Telegram::Bot::UpdatesController
   include StartCommand
   include CheckinCommand
+  include CheckoutCommand
   include Telegram::Bot::UpdatesController::MessageContext
 
   def initialize(*)

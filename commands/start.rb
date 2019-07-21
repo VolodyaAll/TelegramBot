@@ -24,6 +24,7 @@ module StartCommand
     elsif camp_numbers.include?(number)
       session[:number] = number
       redis.set(number, payload['from']['id'])
+      session[:checkin] = false
       "Спасибо, #{session[:number]}, ты зарегистрирован."
     else
       "Такого номера нет в списке, попробуй ещё -> /start!"
