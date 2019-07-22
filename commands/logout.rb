@@ -1,6 +1,8 @@
 require 'redis'
+require_relative 'helpers/base'
 
 module LogoutCommand
+  include BaseCommandsHelper
 
   def logout!(*)
     return unless registered?
@@ -9,10 +11,5 @@ module LogoutCommand
     redis.del(session[:number])
     session.delete(:number)
     respond_with :message, text: 'Счастливо! Можешь зарегистрироваться снова -> /start'
-  end
-
-  def registered?
-    respond_with :message, text: 'Сначала ты должен зарегистрироваться -> /start' unless session.key?(:number)
-    session.key?(:number)
   end
 end

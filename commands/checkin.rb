@@ -1,8 +1,11 @@
 require 'open-uri'
 require 'fileutils'
 require 'json'
+require_relative 'helpers/base'
 
 module CheckinCommand
+  include BaseCommandsHelper
+
   def checkin!(*)
     return unless registered?
     return unless checkouted?
@@ -14,9 +17,9 @@ module CheckinCommand
   def checkin_photo(*)
     session[:timestamp] = Time.now.strftime("%Y-%m-%d_%H-%M-%S")
 
-    FileUtils.mkdir_p(path_for_check) unless File.exist?(path_for_check)
+    FileUtils.mkdir_p(path_for_check('in')) unless File.exist?(path_for_check('in'))
 
-    File.open(path_for_check + 'photo.jpg', 'wb') do |file|
+    File.open(path_for_check('in') + 'photo.jpg', 'wb') do |file|
       file << open("https://api.telegram.org/file/bot#{ENV['BOT_TOKEN']}/" + JSON.parse(URI.open(
         "https://api.telegram.org/bot#{ENV['BOT_TOKEN']}/" + 'getFile?file_id=' + payload['photo'].last['file_id'])
       .read, symbolize_names: true)[:result][:file_path]).read
@@ -27,24 +30,15 @@ module CheckinCommand
   end
 
   def checkin_geolocate(*)
-    File.open(path_for_check + 'location.txt', 'wb') do |file|
+    File.open(path_for_check('in') + 'location.txt', 'wb') do |file|
       file << payload['location']
     end
     session[:checkin] = true
     respond_with :message, text: 'Молодца! Удачной работы! Сдать смену можешь так -> /checkout'
   end
 
-  def registered?
-    respond_with :message, text: 'Сначала ты должен зарегистрироваться -> /start' unless session.key?(:number)
-    session.key?(:number)
-  end
-
   def checkouted?
     respond_with :message, text: 'Ты уже принял смену. Можешь её сдать -> /checkout' if session[:checkin]
     !session[:checkin]
-  end
-
-  def path_for_check
-    "./public/#{session[:number]}/checkins/#{session[:timestamp]}/"
   end
 end

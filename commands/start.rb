@@ -4,7 +4,7 @@ require 'yaml'
 module StartCommand
 
   def start!(*)
-    return if registered_?
+    return if start_registered?
 
     save_context :register
     respond_with :message, text: 'Введи свой номер по лагерю:'
@@ -34,7 +34,7 @@ module StartCommand
     @camp_numbers ||= YAML.load_file('./data/camp_numbers.yml')['camp_numbers']
   end
 
-  def registered_?
+  def start_registered?
     respond_with :message, text: 'Ты уже зарегистрирован. Можешь принять смену -> /checkin' if session.key?(:number)
     session.key?(:number)
   end
