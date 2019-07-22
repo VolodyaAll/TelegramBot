@@ -3,10 +3,12 @@ require 'fileutils'
 require 'json'
 require_relative 'helpers/base'
 require_relative 'helpers/location'
+require_relative 'helpers/photo'
 
 module CheckinCommand
   include BaseCommandsHelper
   include LocationHelper
+  include PhotoHelper
 
   def checkin!(*)
     return unless registered?
@@ -28,7 +30,7 @@ module CheckinCommand
     end
 
     save_context :checkin_location
-    respond_with :message, text: "Красава! Теперь пришли мне свои координаты."
+    respond_with :message, text: "Красава! Теперь пришли мне свои координаты. #{face}"
   end
 
   def checkin_location(*)    

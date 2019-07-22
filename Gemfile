@@ -3,5 +3,6 @@ source "https://rubygems.org"
 gem "telegram-bot"
 
 gem 'redis'
-gem 'redis-store'
-gem 'redis-rails'
+gem 'face_detect'
+gem 'googleauth'
+gem 'google-api-client'
