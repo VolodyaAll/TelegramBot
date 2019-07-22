@@ -2,9 +2,11 @@ require 'open-uri'
 require 'fileutils'
 require 'json'
 require_relative 'helpers/base'
+require_relative 'helpers/location'
 
 module CheckoutCommand
   include BaseCommandsHelper
+  include LocationHelper
 
   def checkout!(*)
     return unless registered?
@@ -25,16 +27,18 @@ module CheckoutCommand
       .read, symbolize_names: true)[:result][:file_path]).read
     end
 
-    save_context :checkout_geolocate
+    save_context :checkout_location
     respond_with :message, text: "Красава! Теперь пришли мне свои координаты."
   end
 
-  def checkout_geolocate(*)
-    File.open(path_for_check('out') + 'location.txt', 'wb') do |file|
-      file << payload['location']
+  def checkout_location(*)
+    if save_valid_location?('out')
+      session[:checkin] = false
+      respond_with :message, text: 'Отдохни хорошенько и приходи снова -> /checkin'
+    else
+      save_context :checkin_location
+      respond_with :message, text: 'Подойди поближе.'
     end
-    session[:checkin] = false
-    respond_with :message, text: 'Отдохни хорошенько и приходи снова -> /checkin'
   end
 
   def checkined?
