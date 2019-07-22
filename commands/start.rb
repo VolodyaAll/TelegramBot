@@ -1,7 +1,9 @@
 require 'redis'
 require 'yaml'
+require_relative 'helpers/base'
 
 module StartCommand
+  include BaseCommandsHelper
 
   def start!(*)
     return if start_registered?
@@ -21,12 +23,9 @@ module StartCommand
     if redis.get(number) || session.key?(:number)
       "Номер #{number} уже зарегистрирован, попробуй ещё -> /start!"
     elsif camp_numbers.include?(number)
-      session[:number] = number
-      redis.set(number, payload['from']['id'])
-      session[:checkin] = false
-      "Спасибо, #{session[:number]}, ты зарегистрирован. Можешь принять смену -> /checkin"
+      login(redis, number)
     else
-      "Такого номера нет в списке, попробуй ещё -> /start!"
+      'Такого номера нет в списке, попробуй ещё -> /start!'
     end
   end
 
@@ -34,8 +33,10 @@ module StartCommand
     @camp_numbers ||= YAML.load_file('./data/camp_numbers.yml')['camp_numbers']
   end
 
-  def start_registered?
-    respond_with :message, text: 'Ты уже зарегистрирован. Можешь принять смену -> /checkin' if session.key?(:number)
-    session.key?(:number)
+  def login(redis, number)
+    session[:number] = number
+    redis.set(number, payload['from']['id'])
+    session[:checkin] = false
+    "Спасибо, #{session[:number]}, ты зарегистрирован. Можешь принять смену -> /checkin"
   end
 end

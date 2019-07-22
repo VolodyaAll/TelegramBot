@@ -6,7 +6,14 @@ module LogoutCommand
 
   def logout!(*)
     return unless registered?
+    return unless checkouted?
 
+    good_bye
+  end
+
+  private
+
+  def good_bye
     redis = Redis.new
     redis.del(session[:number])
     session.delete(:number)

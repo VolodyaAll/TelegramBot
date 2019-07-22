@@ -3,10 +3,14 @@ require 'fileutils'
 require 'json'
 require_relative 'helpers/base'
 require_relative 'helpers/location'
+require_relative 'helpers/photo'
+require_relative 'helpers/save'
 
 module CheckoutCommand
   include BaseCommandsHelper
   include LocationHelper
+  include PhotoHelper
+  include SaveHelper
 
   def checkout!(*)
     return unless registered?
@@ -17,32 +21,23 @@ module CheckoutCommand
   end
 
   def checkout_photo(*)
-    session[:timestamp] = Time.now.strftime("%Y-%m-%d_%H-%M-%S")
-
-    FileUtils.mkdir_p(path_for_check('out')) unless File.exist?(path_for_check('out'))
-
-    File.open(path_for_check('out') + 'photo.jpg', 'wb') do |file|
-      file << open("https://api.telegram.org/file/bot#{ENV['BOT_TOKEN']}/" + JSON.parse(URI.open(
-        "https://api.telegram.org/bot#{ENV['BOT_TOKEN']}/" + 'getFile?file_id=' + payload['photo'].last['file_id'])
-      .read, symbolize_names: true)[:result][:file_path]).read
+    if payload['photo']
+      session[:path_to_photo] = path_to_photo
+      save_context :checkout_location
+      respond_with :message, text: 'Красава! Теперь пришли мне свои координаты.'
+    else
+      save_context :checkout_photo
+      respond_with :message, text: 'Ты прислал что-то не то. Попробуй ещё раз.'
     end
-
-    save_context :checkout_location
-    respond_with :message, text: "Красава! Теперь пришли мне свои координаты."
   end
 
   def checkout_location(*)
-    if save_valid_location?('out')
-      session[:checkin] = false
+    if valid_location?
+      save_data('out')
       respond_with :message, text: 'Отдохни хорошенько и приходи снова -> /checkin'
     else
-      save_context :checkin_location
+      save_context :checkout_location
       respond_with :message, text: 'Подойди поближе.'
     end
-  end
-
-  def checkined?
-    respond_with :message, text: 'Сначала ты должен принять смену -> /checkin' unless session[:checkin]
-    session[:checkin]
   end
 end
